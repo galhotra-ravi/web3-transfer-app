@@ -1,14 +1,19 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import { useWeb3React } from "@web3-react/core";
+import { InjectedConnector } from "@web3-react/injected-connector";
 
-function App() {
-  const [count, setCount] = useState(0);
+const injected = new InjectedConnector({
+  supportedChainIds: [1, 3, 4, 5, 42], // Mainnet and testnets
+});
 
+const App = () => {
+  const { activate, account } = useWeb3React();
+
+  const connectWallet = () => {
+    activate(injected);
+  };
   return (
     <>
-      <div className="w-full h-screen flex justify-center items-center">
+      {/* <div className="w-full h-screen flex justify-center items-center">
         <div className="w-fit min-w-72 h-fit p-5  rounded-xl border-[1px] border-[#a855f7]  shadow-sm shadow-[#a855f7] hover:shadow-md transition-shadow duration-300 flex flex-col gap-5">
 
 
@@ -42,9 +47,16 @@ function App() {
           </div>
 
         </div>
+      </div> */}
+      <div>
+        {account ? (
+          <p>Connected: {account}</p>
+        ) : (
+          <button onClick={connectWallet}>Connect MetaMask</button>
+        )}
       </div>
     </>
   );
-}
+};
 
 export default App;
