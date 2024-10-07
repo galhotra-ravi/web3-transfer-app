@@ -198,7 +198,7 @@ const App = () => {
       <a href="https://github.com/galhotra-ravi" target="_blank">
         <div className="text-white flex justify-center items-center gap-2 mt-7 hover:text-[#a855f7] transition-all ease-in-out duration-150">
           <i className="fa-brands fa-github mt-[2px] "></i>
-          <h2>Ravi Kumar</h2>
+          <h2> {`</>`} by Ravi Kumar</h2>
         </div>
       </a>
       <ToastContainer />
