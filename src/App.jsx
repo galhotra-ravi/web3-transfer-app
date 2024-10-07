@@ -9,13 +9,27 @@ const App = () => {
   const [connectedAddress, setConnectedAddress] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [tokenAddress, setTokenAddress] = useState("0x5dd1cbf142F4B896D18aF835C1734363b0d50fB0"); // Default to NKT token
+  const [tokenAddress, setTokenAddress] = useState(
+    "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+  ); // Default to USDT token
   const [isLoading, setIsLoading] = useState(false);
 
-  const notifyNoWeb3Wallet = () => toast.error("No web3 wallet detected!");
-  const notifyWalletConnected = () => toast.success("Wallet connected successfully!");
-  const notifyTransferSuccess = () => toast.success("Transfer completed successfully!");
-  const notifyTransferError = (error) => toast.error(`Transfer failed: ${error}`);
+  const notifyNoWeb3Wallet = () =>
+    toast.error("No web3 wallet detected!", { toastId: "no-web3-wallet" });
+  const notifyWalletConnected = () =>
+    toast.success("Wallet connected successfully!", { toastId: "wallet-connected" });
+  const notifyTransferSuccess = () =>
+    toast.success("Transfer completed successfully!", {
+      toastId: "transfer-success",
+    });
+  const notifyTransferError = (error) =>
+    toast.error(`Transfer failed: ${error}`, { toastId: "transfer-error" });
+  const notifyConnectWalletFirst = () =>
+    toast.error("Please connect your wallet first!", {
+      toastId: "connect-wallet-first",
+    });
+  const notifyEmptyFields = () =>
+    toast.error("Please fill all fields", { toastId: "empty-fields" });
 
   const erc20Abi = [
     "function transfer(address to, uint256 amount) returns (bool)",
@@ -39,7 +53,7 @@ const App = () => {
       const provider = new ethers.BrowserProvider(instance);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
-      
+
       console.log("Connected Wallet Address:", address);
       setIsWalletConnected(true);
       setConnectedAddress(address);
@@ -52,12 +66,12 @@ const App = () => {
 
   const transferTokens = async () => {
     if (!isWalletConnected) {
-      toast.error("Please connect your wallet first!");
+      notifyConnectWalletFirst();
       return;
     }
 
     if (!recipient || !amount || !tokenAddress) {
-      toast.error("Please fill all fields");
+      notifyEmptyFields();
       return;
     }
 
@@ -85,7 +99,9 @@ const App = () => {
         await contract.transfer.estimateGas(recipient, amountInWei);
       } catch (estimateError) {
         console.error("Gas estimation failed:", estimateError);
-        throw new Error("Transaction is likely to fail. Please check your inputs and try again.");
+        throw new Error(
+          "Transaction is likely to fail. Please check your inputs and try again."
+        );
       }
 
       // If everything looks good, send the transaction
@@ -102,11 +118,13 @@ const App = () => {
   };
 
   return (
-    <div className="w-full h-screen flex justify-center items-center">
+    <div className="w-full h-screen flex flex-col justify-center items-center">
       <div className="w-fit min-w-72 h-fit p-5 rounded-xl border-[1px] border-[#a855f7] shadow-sm shadow-[#a855f7] hover:shadow-md transition-shadow duration-300 flex flex-col gap-5">
         <div className="mb-1 text-white">
           <h2 className="text-xl font-semibold">Web3 Transfer</h2>
-          <p className="text-sm">Send tokens securely using Blockchain Technology</p>
+          <p className="text-sm">
+            Send tokens securely using Blockchain Technology
+          </p>
         </div>
 
         <button
@@ -115,9 +133,16 @@ const App = () => {
           className="h-fit w-full py-2 rounded-md flex justify-center items-center gap-2 text-base text-[#111827] bg-white hover:opacity-85 transition-all ease-in-out duration-150 disabled:opacity-50"
         >
           <i className="fa-solid fa-wallet mt-[2px]"></i>
-          <p className={`font-semibold ${isWalletConnected ? "text-[#a855f7]" : ""}`}>
+          <p
+            className={`font-semibold ${
+              isWalletConnected ? "text-[#a855f7]" : ""
+            }`}
+          >
             {isWalletConnected
-              ? `${connectedAddress.substring(0, 6)}...${connectedAddress.substring(connectedAddress.length - 4)}`
+              ? `${connectedAddress.substring(
+                  0,
+                  6
+                )}...${connectedAddress.substring(connectedAddress.length - 4)}`
               : "Connect Wallet"}
           </p>
         </button>
@@ -136,9 +161,15 @@ const App = () => {
           onChange={(e) => setTokenAddress(e.target.value)}
           disabled={isLoading}
         >
-          <option value="0xc2132D05D31c914a87C6611C10748AEb04B58e8F">USDT</option>
-          <option value="0x5dd1cbf142F4B896D18aF835C1734363b0d50fB0">NKT</option>
-          <option value="0x0000000000000000000000000000000000001010">MATIC</option>
+          <option value="0xc2132D05D31c914a87C6611C10748AEb04B58e8F">
+            USDT
+          </option>
+          <option value="0x5dd1cbf142F4B896D18aF835C1734363b0d50fB0">
+            NKT
+          </option>
+          <option value="0x0000000000000000000000000000000000001010">
+            MATIC
+          </option>
         </select>
         <input
           type="text"
@@ -164,6 +195,12 @@ const App = () => {
           )}
         </button>
       </div>
+      <a href="https://github.com/galhotra-ravi" target="_blank">
+        <div className="text-white flex justify-center items-center gap-2 mt-7 hover:text-[#a855f7] transition-all ease-in-out duration-150">
+          <i className="fa-brands fa-github mt-[2px] "></i>
+          <h2>Ravi Kumar</h2>
+        </div>
+      </a>
       <ToastContainer />
     </div>
   );
