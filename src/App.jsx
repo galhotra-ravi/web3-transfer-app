@@ -76,7 +76,7 @@ const App = () => {
 
       // Check balance
       const balance = await contract.balanceOf(await signer.getAddress());
-      if (balance.lt(amountInWei)) {
+      if (balance < amountInWei) {
         throw new Error("Insufficient balance");
       }
 
