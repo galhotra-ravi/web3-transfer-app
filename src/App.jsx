@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="w-full h-screen flex justify-center items-center">
+        <div className="w-fit min-w-72 h-fit p-5  text-white border-white rounded-lg shadow-[#e4cbff] shadow-sm">
+
+
+          <div>
+            <h2 className="text-xl font-semibold">Web3 Transfer</h2>
+            <p className="text-sm">
+              Send tokens securely using Blockchain Technology
+            </p>
+          </div>
+
+          <div >
+            <button className="flex justify-center items-center gap-2 text-base bg-co" >
+            <i class="fa-solid fa-wallet text-[#ffffff]"></i>
+            <p>Connect Wallet</p>
+            </button>
+          </div>
+
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
