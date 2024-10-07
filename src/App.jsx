@@ -9,12 +9,19 @@ const App = () => {
   const [connectedAddress, setConnectedAddress] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [tokenAddress, setTokenAddress] = useState("0xc2132D05D31c914a87C6611C10748AEb04B58e8F"); // Default to USDT
+  const [tokenAddress, setTokenAddress] = useState("0x5dd1cbf142F4B896D18aF835C1734363b0d50fB0"); // Default to NKT token
+  const [isLoading, setIsLoading] = useState(false);
 
   const notifyNoWeb3Wallet = () => toast.error("No web3 wallet detected!");
   const notifyWalletConnected = () => toast.success("Wallet connected successfully!");
   const notifyTransferSuccess = () => toast.success("Transfer completed successfully!");
-  const notifyTransferError = (error) => toast.error(`Transfer failed: ${error.message}`);
+  const notifyTransferError = (error) => toast.error(`Transfer failed: ${error}`);
+
+  const erc20Abi = [
+    "function transfer(address to, uint256 amount) returns (bool)",
+    "function balanceOf(address account) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+  ];
 
   const connectWallet = async () => {
     try {
@@ -43,19 +50,6 @@ const App = () => {
     }
   };
 
-  const erc20Abi = [
-    {
-      constant: false,
-      inputs: [
-        { name: "to", type: "address" },
-        { name: "value", type: "uint256" },
-      ],
-      name: "transfer",
-      outputs: [{ name: "", type: "bool" }],
-      type: "function",
-    },
-  ];
-
   const transferTokens = async () => {
     if (!isWalletConnected) {
       toast.error("Please connect your wallet first!");
@@ -67,21 +61,43 @@ const App = () => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(tokenAddress, erc20Abi, signer);
 
-      // Convert amount to wei (assuming 18 decimals, adjust if needed)
-      const amountInWei = ethers.parseUnits(amount, 18);
+      // Get token decimals
+      const decimals = await contract.decimals();
 
+      // Convert amount to wei
+      const amountInWei = ethers.parseUnits(amount, decimals);
+
+      // Check balance
+      const balance = await contract.balanceOf(await signer.getAddress());
+      if (balance.lt(amountInWei)) {
+        throw new Error("Insufficient balance");
+      }
+
+      // Estimate gas to check for other potential issues
+      try {
+        await contract.transfer.estimateGas(recipient, amountInWei);
+      } catch (estimateError) {
+        console.error("Gas estimation failed:", estimateError);
+        throw new Error("Transaction is likely to fail. Please check your inputs and try again.");
+      }
+
+      // If everything looks good, send the transaction
       const tx = await contract.transfer(recipient, amountInWei);
       await tx.wait();
       console.log(`Transferred ${amount} tokens to ${recipient}`);
       notifyTransferSuccess();
     } catch (error) {
       console.error("Transfer failed:", error);
-      notifyTransferError(error);
+      notifyTransferError(error.message || "Unknown error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,7 +111,8 @@ const App = () => {
 
         <button
           onClick={connectWallet}
-          className="h-fit w-full py-2 rounded-md flex justify-center items-center gap-2 text-base text-[#111827] bg-white hover:opacity-85 transition-all ease-in-out duration-150"
+          disabled={isLoading}
+          className="h-fit w-full py-2 rounded-md flex justify-center items-center gap-2 text-base text-[#111827] bg-white hover:opacity-85 transition-all ease-in-out duration-150 disabled:opacity-50"
         >
           <i className="fa-solid fa-wallet mt-[2px]"></i>
           <p className={`font-semibold ${isWalletConnected ? "text-[#a855f7]" : ""}`}>
@@ -111,14 +128,16 @@ const App = () => {
           onChange={(e) => setRecipient(e.target.value)}
           placeholder="Recipient's Address"
           className="px-3 py-1 text- outline-none rounded-md"
+          disabled={isLoading}
         />
         <select
           className="px-2 py-1 text- outline-none rounded-md"
           value={tokenAddress}
           onChange={(e) => setTokenAddress(e.target.value)}
+          disabled={isLoading}
         >
           <option value="0xc2132D05D31c914a87C6611C10748AEb04B58e8F">USDT</option>
-          <option value="0x5dd1cbf142f4b896d18af835c1734363b0d50fb0">NKT</option>
+          <option value="0x5dd1cbf142F4B896D18aF835C1734363b0d50fB0">NKT</option>
           <option value="0x0000000000000000000000000000000000001010">MATIC</option>
         </select>
         <input
@@ -127,14 +146,22 @@ const App = () => {
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="px-3 py-1 text- outline-none rounded-md"
+          disabled={isLoading}
         />
 
         <button
           onClick={transferTokens}
-          className="h-fit w-full py-2 rounded-md flex justify-center items-center gap-2 text-base text-[#ffffff] bg-[#a855f7] hover:opacity-85 transition-all ease-in-out duration-150"
+          disabled={isLoading}
+          className="h-fit w-full py-2 rounded-md flex justify-center items-center gap-2 text-base text-[#ffffff] bg-[#a855f7] hover:opacity-85 transition-all ease-in-out duration-150 disabled:opacity-50"
         >
-          <i className="fa-solid fa-paper-plane mt-[2px]"></i>
-          <p className="font-semibold">Transfer</p>
+          {isLoading ? (
+            <span>Processing...</span>
+          ) : (
+            <>
+              <i className="fa-solid fa-paper-plane mt-[2px]"></i>
+              <p className="font-semibold">Transfer</p>
+            </>
+          )}
         </button>
       </div>
       <ToastContainer />
